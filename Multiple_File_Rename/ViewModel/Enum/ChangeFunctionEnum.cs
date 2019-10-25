@@ -10,5 +10,7 @@ namespace Multiple_File_Rename.ViewModel.Enum
     {
         Replace = 1,
         Add = 2,
+        Insert = 3,
+        Cut = 4
     }
 }

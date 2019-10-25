@@ -1,9 +1,11 @@
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using Multiple_File_Rename.Model;
 using Multiple_File_Rename.ViewModel.Enum;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows.Input;
 
 namespace Multiple_File_Rename.ViewModel
@@ -57,6 +59,33 @@ namespace Multiple_File_Rename.ViewModel
                     _isShowAdd = value;
                     RaisePropertyChanged("IsShowAdd");
                 }
+            }
+        }
+
+        private bool _isShowInsert;
+
+        public bool IsShowInsert
+        {
+            get
+            {
+
+                return _isShowInsert;
+            }
+            set
+            {
+                if (value != _isShowInsert)
+                {
+                    _isShowInsert = value;
+                    RaisePropertyChanged("IsShowInsert");
+                }
+            }
+        }
+
+        public bool IsBrowsed
+        {
+            get
+            {
+                return FilesnameList != null;
             }
         }
 
@@ -115,6 +144,42 @@ namespace Multiple_File_Rename.ViewModel
             }
         }
 
+        private string _indexText;
+
+        public string IndexText
+        {
+            get
+            {
+                return _indexText;
+            }
+            set
+            {
+                if (value != _indexText)
+                {
+                    _indexText = value;
+                    RaisePropertyChanged("IndexText");
+                }
+            }
+        }
+
+        private string _insertText;
+
+        public string InsertText
+        {
+            get
+            {
+                return _insertText;
+            }
+            set
+            {
+                if (value != _insertText)
+                {
+                    _insertText = value;
+                    RaisePropertyChanged("InsertText");
+                }
+            }
+        }
+
 
         private List<string> _filesnameList;
 
@@ -168,6 +233,38 @@ namespace Multiple_File_Rename.ViewModel
             }
         }
 
+        private ICommand _findTextKeyUp;
+
+        public ICommand FindTextKeyUp
+        {
+            get
+            {
+                if (_findTextKeyUp == null)
+                {
+                    _findTextKeyUp = new RelayCommand<object>(OnFindTextKeyUp);
+                }
+
+                return _findTextKeyUp;
+            }
+        }
+
+
+        private ICommand _replaceTextKeyUp;
+
+        public ICommand ReplaceTextKeyUp
+        {
+            get
+            {
+                if (_replaceTextKeyUp == null)
+                {
+                    _replaceTextKeyUp = new RelayCommand<object>(OnReplaceTextKeyUp);
+                }
+
+                return _replaceTextKeyUp;
+            }
+        }
+
+
         private ICommand _browseCommand;
 
         public ICommand BrowseCommand
@@ -183,14 +280,28 @@ namespace Multiple_File_Rename.ViewModel
             }
         }
 
+        private ICommand _confirmCommand;
 
+        public ICommand ConfirmCommand
+        {
+            get
+            {
+                if (_confirmCommand == null)
+                {
+                    _confirmCommand = new RelayCommand(OnConfirmClicked);
+                }
+
+                return _confirmCommand;
+            }
+        }
+
+        private List<FileRename> fileNameFullPaty;
 
         /// <summary>
         /// Initializes a new instance of the MainViewModel class.
         /// </summary>
         public MainViewModel()
         {
-
             #region
             ////if (IsInDesignMode)
             ////{
@@ -209,6 +320,7 @@ namespace Multiple_File_Rename.ViewModel
             ChangeFunctionEnum selectItem = (ChangeFunctionEnum)((System.Windows.Controls.Primitives.Selector)((System.Windows.RoutedEventArgs)sender).Source).SelectedItem;
             IsShowReplace = selectItem == ChangeFunctionEnum.Replace;
             IsShowAdd = selectItem == ChangeFunctionEnum.Add;
+            IsShowInsert = selectItem == ChangeFunctionEnum.Insert;
         }
 
         private void OnBrowseClicked()
@@ -218,7 +330,66 @@ namespace Multiple_File_Rename.ViewModel
             Nullable<bool> result = dlg.ShowDialog();
             if (result == true)
             {
-                FilesnameList = new List<string>(dlg.FileNames);
+                string filename;
+                string getDirectory;
+                FilesnameList = new List<string>();
+                ChangedFilesnameList = new List<string>();
+                fileNameFullPaty = new List<FileRename>();
+                foreach (string ofileName in dlg.FileNames)
+                { 
+                    filename = System.IO.Path.GetFileName(ofileName);
+                    getDirectory = System.IO.Path.GetDirectoryName(ofileName);
+                    fileNameFullPaty.Add(new FileRename(ofileName, getDirectory, filename));
+                    FilesnameList.Add(filename);
+                    ChangedFilesnameList.Add(filename);
+                }
+                
+                RaisePropertyChanged("IsBrowsed");
+            }
+        }
+
+        private void OnConfirmClicked()
+        {
+            string getDirectory;
+            FilesnameList = new List<string>();
+            foreach (FileRename rf in fileNameFullPaty)
+            {
+                System.IO.File.Move(rf.FullPath, rf.NewFullPath);
+                FilesnameList.Add(rf.NewFileName);
+                rf.AfterMove();
+            }
+            FindText = ReplaceText;
+
+            //System.IO.File.Move("c:\1.txt", "c:\2.txt")
+        }
+
+        private void OnFindTextKeyUp(object obj)
+        {
+            /*get string from FindTextBox*/
+            string findString = ((System.Windows.Controls.TextBox)((System.Windows.RoutedEventArgs)obj).OriginalSource).Text;
+            ChangePreview(findString, ReplaceText);
+        }
+
+        private void OnReplaceTextKeyUp(object obj)
+        {
+            /*get string from replaceTextBox*/
+            string repliceString = ((System.Windows.Controls.TextBox)((System.Windows.RoutedEventArgs)obj).OriginalSource).Text;
+            ChangePreview(FindText, repliceString);
+        }
+
+        private void ChangePreview(string find, string replace)
+        {
+            if(!string.IsNullOrEmpty(replace) && !string.IsNullOrEmpty(find))
+            {
+                ChangedFilesnameList = new List<string>();
+                string changedFilename;
+                foreach (FileRename rf in fileNameFullPaty)
+                {
+                    changedFilename = Regex.Replace(rf.FileName, find, replace);
+                    ChangedFilesnameList.Add(changedFilename);
+                    rf.NewFileName = changedFilename;
+                    rf.NewFullPath = rf.DirectoryName + "\\" + changedFilename;
+                }
             }
         }
     }

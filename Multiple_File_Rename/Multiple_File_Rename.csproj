@@ -75,6 +75,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Model\FileRename.cs" />
+    <Compile Include="Tools\BindableRichTextBox.cs" />
     <Compile Include="ViewModel\Convert\BooleanVisibilityConverter.cs" />
     <Compile Include="ViewModel\Enum\ChangeFunctionEnum.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
@@ -121,7 +122,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="View\" />

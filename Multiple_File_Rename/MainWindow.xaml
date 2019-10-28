@@ -9,6 +9,7 @@
         xmlns:enum="clr-namespace:Multiple_File_Rename.ViewModel.Enum"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
+        xmlns:ui="clr-namespace:Multiple_File_Rename.Tools"
         Title="Multiple files rename tool" Height="450" Width="800"
         DataContext="{Binding Main, Source={StaticResource Locator}}">
 
@@ -154,27 +155,27 @@
                 <ColumnDefinition Width="*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
 
-            <ListBox ItemsSource="{Binding FilesnameList}">
+            <ListBox ItemsSource="{Binding FileNameFullPart}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding}" />
+                        <StackPanel Name="FilesNameStackPanel" Orientation="Horizontal">
+                            <ui:BindableRichTextBox BorderThickness="0" Width="{Binding Path=ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type Grid}}}" IsReadOnly="True" Source ="{Binding FileNameDocument, Mode=OneWay}" Margin="-6,0" />
                         </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
 
-            <ListBox Grid.Column="1" ItemsSource="{Binding ChangedFilesnameList}">
+            <ListBox Grid.Column="1" ItemsSource="{Binding FileNameFullPart}">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding}" />
+                            <ui:BindableRichTextBox BorderThickness="0" Width="{Binding Path=ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type Grid}}}" IsReadOnly="True" Source ="{Binding NewFileNameDocument, Mode=OneWay}" Margin="-6,0" />
                         </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
         </Grid>
-        
-        <Button Grid.Row="4" Content="Confirm" Command="{Binding ConfirmCommand}"></Button>
+
+        <Button Grid.Row="4" Content="Confirm" Command="{Binding ConfirmCommand}" IsEnabled="{Binding IsConfirmEnable}"></Button>
     </Grid>
 </Window>

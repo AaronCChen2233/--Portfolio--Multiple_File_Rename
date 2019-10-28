@@ -24,7 +24,6 @@ namespace Multiple_File_Rename
         public MainWindow()
         {
             InitializeComponent();
-            //FunctionType.ItemsSource = Enum.GetValues(typeof(ChangeFunctionEnum)).Cast<ChangeFunctionEnum>().ToList<ChangeFunctionEnum>();
         }
     }
 }

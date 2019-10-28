@@ -6,7 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 
 namespace Multiple_File_Rename.ViewModel
 {
@@ -81,11 +84,29 @@ namespace Multiple_File_Rename.ViewModel
             }
         }
 
+        private bool _isConfirmEnable;
+
+        public bool IsConfirmEnable
+        {
+            get
+            {
+                return _isConfirmEnable;
+            }
+            set
+            {
+                if (value != _isConfirmEnable)
+                {
+                    _isConfirmEnable = value;
+                    RaisePropertyChanged("IsConfirmEnable");
+                }
+            }
+        }
+
         public bool IsBrowsed
         {
             get
             {
-                return FilesnameList != null;
+                return FileNameFullPart != null;
             }
         }
 
@@ -180,44 +201,6 @@ namespace Multiple_File_Rename.ViewModel
             }
         }
 
-
-        private List<string> _filesnameList;
-
-        public List<string> FilesnameList
-        {
-            get
-            {
-                return _filesnameList;
-            }
-            set
-            {
-                if (value != _filesnameList)
-                {
-                    _filesnameList = value;
-                    RaisePropertyChanged("FilesnameList");
-                }
-            }
-        }
-
-        private List<string> _changedFilesnameList;
-
-        public List<string> ChangedFilesnameList
-        {
-            get
-            {
-
-                return _changedFilesnameList;
-            }
-            set
-            {
-                if (value != _changedFilesnameList)
-                {
-                    _changedFilesnameList = value;
-                    RaisePropertyChanged("ChangedFilesnameList");
-                }
-            }
-        }
-
         private ICommand _functionTypeSelected;
 
         public ICommand FunctionTypeSelected
@@ -295,7 +278,24 @@ namespace Multiple_File_Rename.ViewModel
             }
         }
 
-        private List<FileRename> fileNameFullPaty;
+        private List<FileRename> _fileNameFullPart;
+
+        public List<FileRename> FileNameFullPart
+        {
+            get
+            {
+                return _fileNameFullPart;
+            }
+            set
+            {
+                if (value != _fileNameFullPart)
+                {
+                    _fileNameFullPart = value;
+                    RaisePropertyChanged("FileNameFullPart");
+                }
+            }
+        }
+
 
         /// <summary>
         /// Initializes a new instance of the MainViewModel class.
@@ -332,35 +332,28 @@ namespace Multiple_File_Rename.ViewModel
             {
                 string filename;
                 string getDirectory;
-                FilesnameList = new List<string>();
-                ChangedFilesnameList = new List<string>();
-                fileNameFullPaty = new List<FileRename>();
+                FileNameFullPart = new List<FileRename>();
                 foreach (string ofileName in dlg.FileNames)
-                { 
+                {
                     filename = System.IO.Path.GetFileName(ofileName);
                     getDirectory = System.IO.Path.GetDirectoryName(ofileName);
-                    fileNameFullPaty.Add(new FileRename(ofileName, getDirectory, filename));
-                    FilesnameList.Add(filename);
-                    ChangedFilesnameList.Add(filename);
+                    FileNameFullPart.Add(new FileRename(ofileName, filename, ofileName, filename, getDirectory));
                 }
-                
+
                 RaisePropertyChanged("IsBrowsed");
             }
         }
 
         private void OnConfirmClicked()
         {
-            string getDirectory;
-            FilesnameList = new List<string>();
-            foreach (FileRename rf in fileNameFullPaty)
+            foreach (FileRename rf in FileNameFullPart)
             {
                 System.IO.File.Move(rf.FullPath, rf.NewFullPath);
-                FilesnameList.Add(rf.NewFileName);
                 rf.AfterMove();
             }
             FindText = ReplaceText;
-
-            //System.IO.File.Move("c:\1.txt", "c:\2.txt")
+            IsConfirmEnable = FindText != ReplaceText;
+            ChangePreview(FindText, ReplaceText);
         }
 
         private void OnFindTextKeyUp(object obj)
@@ -368,6 +361,7 @@ namespace Multiple_File_Rename.ViewModel
             /*get string from FindTextBox*/
             string findString = ((System.Windows.Controls.TextBox)((System.Windows.RoutedEventArgs)obj).OriginalSource).Text;
             ChangePreview(findString, ReplaceText);
+            IsConfirmEnable = findString != ReplaceText;
         }
 
         private void OnReplaceTextKeyUp(object obj)
@@ -375,21 +369,44 @@ namespace Multiple_File_Rename.ViewModel
             /*get string from replaceTextBox*/
             string repliceString = ((System.Windows.Controls.TextBox)((System.Windows.RoutedEventArgs)obj).OriginalSource).Text;
             ChangePreview(FindText, repliceString);
+            IsConfirmEnable = FindText != repliceString;
         }
 
         private void ChangePreview(string find, string replace)
         {
-            if(!string.IsNullOrEmpty(replace) && !string.IsNullOrEmpty(find))
+            if(replace!=null && find!=null)
             {
-                ChangedFilesnameList = new List<string>();
-                string changedFilename;
-                foreach (FileRename rf in fileNameFullPaty)
+                List<FileRename> TempFileNameList = new List<FileRename>();
+                //FilesnameList = new List<FlowDocument>();
+                string changedFilename = "";
+                string[] findArray = { find };
+                foreach (FileRename rf in FileNameFullPart)
                 {
-                    changedFilename = Regex.Replace(rf.FileName, find, replace);
-                    ChangedFilesnameList.Add(changedFilename);
+                    changedFilename = "";
+                    string[] splitedString = rf.FileName.Split(findArray, StringSplitOptions.None);
+                    Paragraph findTempFlowDocument = new Paragraph();
+                    Paragraph replaceTempFlowDocument = new Paragraph();
+                    for (int i = 0; i<= splitedString.Length-1; i++)
+                    {
+                        findTempFlowDocument.Inlines.Add(new Run(splitedString[i]));
+                        replaceTempFlowDocument.Inlines.Add(new Run(splitedString[i]));
+                        changedFilename += splitedString[i];
+                        if (i < splitedString.Length-1)
+                        {
+                            findTempFlowDocument.Inlines.Add(new Run(find) { Background = Brushes.Red,Foreground = Brushes.White });
+                            replaceTempFlowDocument.Inlines.Add(new Run(replace) { Background = Brushes.Red, Foreground = Brushes.White });
+                            changedFilename += replace;
+                        }
+                    }
+
+                    rf.FileNameDocument = new FlowDocument(findTempFlowDocument);
+                    rf.NewFileNameDocument = new FlowDocument(replaceTempFlowDocument);
                     rf.NewFileName = changedFilename;
                     rf.NewFullPath = rf.DirectoryName + "\\" + changedFilename;
+                    TempFileNameList.Add(rf);
                 }
+
+                FileNameFullPart = TempFileNameList;
             }
         }
     }

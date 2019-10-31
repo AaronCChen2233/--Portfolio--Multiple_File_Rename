@@ -317,10 +317,30 @@ namespace Multiple_File_Rename.ViewModel
 
         private void OnFunctionTypeSelected(object sender)
         {
+            FileNameFullPart = new List<FileRename>();
             ChangeFunctionEnum selectItem = (ChangeFunctionEnum)((System.Windows.Controls.Primitives.Selector)((System.Windows.RoutedEventArgs)sender).Source).SelectedItem;
             IsShowReplace = selectItem == ChangeFunctionEnum.Replace;
             IsShowAdd = selectItem == ChangeFunctionEnum.Add;
             IsShowInsert = selectItem == ChangeFunctionEnum.Insert;
+
+            /*without replace other function haven't finish so disable them*/
+            switch (selectItem)
+            {
+                case ChangeFunctionEnum.Replace:
+                    IsConfirmEnable = FindText != ReplaceText;
+                    break;
+                case ChangeFunctionEnum.Add:
+                    IsConfirmEnable = false;
+                    break;
+                case ChangeFunctionEnum.Insert:
+                    IsConfirmEnable = false;
+                    break;
+                case ChangeFunctionEnum.Cut:
+                    IsConfirmEnable = false;
+                    break;
+                default:
+                    break;
+            }
         }
 
         private void OnBrowseClicked()

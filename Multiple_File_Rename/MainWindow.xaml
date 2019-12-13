@@ -168,8 +168,18 @@
                 <ColumnDefinition Width="auto"></ColumnDefinition>
                 <ColumnDefinition></ColumnDefinition>
             </Grid.ColumnDefinitions>
-            <TextBlock Text="KeepSize:"></TextBlock>
-            <TextBox Grid.Column="1" Text="{Binding KeepSizeText ,Mode=TwoWay}" PreviewTextInput="TextBox_PreviewTextInput">
+      
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="auto"></ColumnDefinition>
+                    <ColumnDefinition></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+
+                <RadioButton Content="Cut End" GroupName="Cut" IsChecked="True" ></RadioButton>
+                <RadioButton Grid.Column="1" Content="Cut Head" GroupName="Cut" IsChecked="{Binding IsCutHead,Mode=TwoWay}"></RadioButton>
+            </Grid>
+            <TextBlock Grid.Row="1" Text="KeepSize:"></TextBlock>
+            <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding KeepSizeText ,Mode=TwoWay}" PreviewTextInput="TextBox_PreviewTextInput">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="KeyUp">
                         <command:EventToCommand Command="{Binding KeepSizeTextKeyUp}"

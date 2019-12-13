@@ -104,6 +104,26 @@ namespace Multiple_File_Rename.ViewModel
             }
         }
 
+        private bool _isCutHead;
+
+        public bool IsCutHead
+        {
+            get
+            {
+                return _isCutHead;
+            }
+            set
+            {
+                if (value != _isCutHead)
+                {
+                    _isCutHead = value;
+                    RaisePropertyChanged("IsCutHead");
+                    CutChangePreview(int.Parse(KeepSizeText));
+                }
+            }
+        }
+
+
         private bool _isConfirmEnable;
 
         public bool IsConfirmEnable
@@ -556,9 +576,18 @@ namespace Multiple_File_Rename.ViewModel
             {
                 extension = Path.GetExtension(rf.FileName);
                 cutedFilename = rf.FileName;
-                cutedFilename.Replace(extension, "");
+                cutedFilename = cutedFilename.Replace(extension, "");
                 reKeepIndex = keepIndex > cutedFilename.Length ? cutedFilename.Length : keepIndex;
-                cutedFilename = cutedFilename.Substring(0, reKeepIndex);
+
+                if (IsCutHead)
+                {
+                    cutedFilename = cutedFilename.Substring(cutedFilename.Length-reKeepIndex, reKeepIndex);
+                }
+                else
+                {
+                    cutedFilename = cutedFilename.Substring(0, reKeepIndex);
+                }
+            
                 cutedFilename += extension;
 
                 Paragraph cutedTempFlowDocument = new Paragraph();

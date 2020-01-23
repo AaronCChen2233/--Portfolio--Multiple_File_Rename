@@ -105,7 +105,7 @@
             </TextBox>
         </Grid>
         <!--Hadn't Finish so put IsEnabled="False"-->
-        <Grid Grid.Row="2" IsEnabled="False" Name="AddGrid" Visibility="{Binding IsShowAdd, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Grid Grid.Row="2" IsEnabled="True" Name="AddGrid" Visibility="{Binding IsShowAdd, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid.Resources>
                 <ResourceDictionary>
                     <Style TargetType="{x:Type TextBox}">
@@ -121,7 +121,14 @@
                 <ColumnDefinition></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <TextBlock Text="Add:"></TextBlock>
-            <TextBox Grid.Column="1" Text="{Binding AddText ,Mode=TwoWay}"></TextBox>
+            <TextBox Grid.Column="1" Text="{Binding AddText ,Mode=TwoWay}">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="KeyUp">
+                        <command:EventToCommand Command="{Binding KeepSizeTextKeyUp}"
+                                            PassEventArgsToCommand="True" CommandParameter="{Binding Path=this.DateContext}" />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </TextBox>
         </Grid>
         <!--Hadn't Finish so put IsEnabled="False"-->
         <Grid IsEnabled="False" Name="InsertGrid" Grid.ColumnSpan="2" Grid.Row="2" Margin="0 5 0 0" Visibility="{Binding IsShowInsert,Converter={StaticResource BooleanToVisibilityConverter}}">

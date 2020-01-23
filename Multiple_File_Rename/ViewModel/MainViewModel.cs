@@ -104,6 +104,26 @@ namespace Multiple_File_Rename.ViewModel
             }
         }
 
+        private bool _isShowAddData;
+
+        public bool IsShowAddData
+        {
+            get
+            {
+                return _isShowAddData;
+            }
+            set
+            {
+                if (value != _isShowAddData)
+                {
+                    _isShowAddData = value;
+                    RaisePropertyChanged("IsShowAddData");
+                }
+            }
+        }
+
+        
+
         private bool _isCutHead;
 
         public bool IsCutHead
@@ -339,6 +359,21 @@ namespace Multiple_File_Rename.ViewModel
             }
         }
 
+        private ICommand _addTextKeyUp;
+
+        public ICommand AddTextKeyUp
+        {
+            get
+            {
+                if (_addTextKeyUp == null)
+                {
+                    _addTextKeyUp = new RelayCommand<object>(OnAddTextKeyUp);
+                }
+
+                return _addTextKeyUp;
+            }
+        }
+
         private ICommand _browseCommand;
 
         public ICommand BrowseCommand
@@ -416,6 +451,7 @@ namespace Multiple_File_Rename.ViewModel
             IsShowAdd = selectItem == ChangeFunctionEnum.Add;
             IsShowInsert = selectItem == ChangeFunctionEnum.Insert;
             IsShowCut = selectItem == ChangeFunctionEnum.Cut;
+            IsShowAddData = selectItem == ChangeFunctionEnum.AddDate;
             nowFunction = selectItem;
             FindText = "";
             ReplaceText = "";
@@ -434,6 +470,9 @@ namespace Multiple_File_Rename.ViewModel
                     IsConfirmEnable = false;
                     break;
                 case ChangeFunctionEnum.Cut:
+                    IsConfirmEnable = false;
+                    break;
+                case ChangeFunctionEnum.AddDate:
                     IsConfirmEnable = false;
                     break;
                 default:
@@ -458,6 +497,12 @@ namespace Multiple_File_Rename.ViewModel
                     FileNameFullPart.Add(new FileRename(ofileName, filename, ofileName, filename, getDirectory));
                 }
 
+                if (IsShowAddData)
+                {
+                    AddDateChangePreview();
+                    IsConfirmEnable = true;
+                }
+
                 RaisePropertyChanged("IsBrowsed");
             }
         }
@@ -479,6 +524,7 @@ namespace Multiple_File_Rename.ViewModel
 
                     break;
                 case ChangeFunctionEnum.Add:
+
                     break;
                 case ChangeFunctionEnum.Insert:
                     break;
@@ -491,6 +537,16 @@ namespace Multiple_File_Rename.ViewModel
                     
                     IsConfirmEnable = false;
                     CutChangePreview(int.Parse(KeepSizeText));
+                    break;
+
+                case ChangeFunctionEnum.AddDate:
+                    foreach (FileRename rf in FileNameFullPart)
+                    {
+                        System.IO.File.Move(rf.FullPath, rf.NewFullPath);
+                        rf.AfterMove();
+                    }
+
+                    IsConfirmEnable = false;
                     break;
                 default:
                     break;
@@ -524,6 +580,16 @@ namespace Multiple_File_Rename.ViewModel
                 IsConfirmEnable = !isRepeated;
 
                 ErrorMessage = isRepeated ? "After cut there have somme files name are repeated So can't cut" : "";
+            }
+        }
+
+        private void OnAddTextKeyUp(object obj)
+        {
+            string AddString = ((System.Windows.Controls.TextBox)((System.Windows.RoutedEventArgs)obj).OriginalSource).Text;
+            IsConfirmEnable = !string.IsNullOrEmpty(AddString);
+            if (!string.IsNullOrEmpty(AddString))
+            {
+              
             }
         }
 
@@ -614,6 +680,52 @@ namespace Multiple_File_Rename.ViewModel
                 }
             }
        
+            return isRepeated;
+        }
+
+        private bool AddDateChangePreview()
+        {
+            bool isRepeated = false;
+            List<FileRename> TempFileNameList = new List<FileRename>();
+            string addedDateFilename = "";
+            string extension = "";
+
+            foreach (FileRename rf in FileNameFullPart)
+            {
+                DateTime creatTime = File.GetLastWriteTime(rf.FullPath);
+                extension = Path.GetExtension(rf.FileName);
+                addedDateFilename = rf.FileName;
+                addedDateFilename = addedDateFilename.Replace(extension, "");
+
+
+                addedDateFilename = creatTime.ToString("yyyyMMdd_") + addedDateFilename;
+
+                addedDateFilename += extension;
+
+                Paragraph cutedTempFlowDocument = new Paragraph();
+                cutedTempFlowDocument.Inlines.Add(new Run(addedDateFilename));
+
+                Paragraph originalTempFlowDocument = new Paragraph();
+                originalTempFlowDocument.Inlines.Add(new Run(rf.FileName));
+
+                rf.FileNameDocument = new FlowDocument(originalTempFlowDocument);
+                rf.NewFileNameDocument = new FlowDocument(cutedTempFlowDocument);
+                rf.NewFileName = addedDateFilename;
+                rf.NewFullPath = rf.DirectoryName + "\\" + addedDateFilename;
+                TempFileNameList.Add(rf);
+
+            }
+
+            FileNameFullPart = TempFileNameList;
+            foreach (FileRename rf in FileNameFullPart)
+            {
+                if (FileNameFullPart.Select(a => a).Where(x => (x.NewFileName == rf.NewFileName)).Count() > 1)
+                {
+                    isRepeated = true;
+                    break;
+                }
+            }
+
             return isRepeated;
         }
     }
